@@ -35,6 +35,7 @@ def starter():
     total_cf[10,1] = np.nanmean([total_cf[10,0], total_cf[10,2]], axis=0)
     
     # TTL Cirrus Profile Cloud Fraction Data (dealt with separately from other cloud fraction indices)
+    base_path = '/home/disk/p/aodhan/cf_physical_parameters_correlations'
     profile_cf_map_files_old_old = glob.glob(base_path + '/aerosol_cloud_distinctions/cfmaps/TTLcfMonthlyProfiles_strataerosolremoved_*.npy')
     profile_cf_map_files_old = []
     for file in profile_cf_map_files_old_old:

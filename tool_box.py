@@ -15,7 +15,11 @@ def starter():
     temp_map_prof_files = glob.glob('/home/bdc2/aodhan/ROwetPrfMonthlyGriddedMapsCDAAC/*.npy')
     temp_map_prof_files = np.sort(temp_map_prof_files)
     temp_profs = np.array([np.load(temp_map_prof_files[yr]) for yr in range(len(temp_map_prof_files))])
-    cpts, cpzs = cpt_finder(temp_profs)
+
+    cpt_files = np.sort(glob.glob('/usb/cmm_gws/monthlyDryCPT/*'))
+    cptcpz_cals = np.array([np.load(file_item) for file_item in cpt_files])
+    cpts = cptcpz_cals[:,:,:,:,0]
+    cpzs = cptcpz_cals[:,:,:,:,1]
 
     # Water Vapor Anomaly Data
     wv_raw = np.load('/home/disk/p/aodhan/cf_physical_parameters_correlations/fileCreators/h2o_calendar_raw.npy')

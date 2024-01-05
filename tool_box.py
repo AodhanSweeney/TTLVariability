@@ -61,6 +61,7 @@ def starter():
     EMPTYallTCFMonthlyMaps[:] = np.NaN
     allTCFMonthlyMaps_2006_2020 = np.concatenate((EMPTYallTCFMonthlyMaps, allTCFMonthlyMaps), axis=0)
     allTCFCalendarMaps = np.reshape(allTCFMonthlyMaps_2006_2020, (16,12,24,144))
+    allTCFCalendarMaps[10,1] = np.nanmean([allTCFCalendarMaps[10,0], allTCFCalendarMaps[10,2]], axis=0)
 
     # Large Scale Dynamics
     lsd_base_path = '/home/disk/p/aodhan/large_scale_dynamics/'
@@ -126,16 +127,27 @@ def tropical_average(data_calendar):
     weights = np.cos(np.deg2rad(np.linspace(bounds[0], bounds[0]*-1, bounds[1])))
     if np.ndim(data_calendar) == 4:
         data_calendar_15ns = data_calendar[:,:,bounds[2]:bounds[3],:]
-        data_calendar_weighted = data_calendar_15ns*weights[np.newaxis, np.newaxis, :, np.newaxis]
+        weights_array = np.broadcast_to(weights, (16,12,144,12))
+        weights_array = np.swapaxes(weights_array, 2,3)
+        data_calendar_weighted = np.multiply(data_calendar_15ns, weights_array)
+        nanned_weights_array = np.multiply(np.divide(data_calendar_weighted, data_calendar_weighted), weights_array)
         shape = np.shape(data_calendar_weighted)
-        tropical_reshaped = np.reshape(data_calendar_weighted, (shape[0], shape[1], shape[2]*shape[3]))
-        tropical_mean = np.nansum(tropical_reshaped, axis=2)/(sum(weights)*144)
+
+        tropical_data_reshaped = np.reshape(data_calendar_weighted, (shape[0], shape[1], shape[2]*shape[3]))
+        tropical_weights_reshaped = np.reshape(nanned_weights_array, (shape[0], shape[1], shape[2]*shape[3]))
+        tropical_mean = np.nansum(tropical_data_reshaped, axis=2)/np.nansum(tropical_weights_reshaped, axis=2)
+        
     elif np.ndim(data_calendar) == 5:
         data_calendar_15ns = data_calendar[:,:,bounds[2]:bounds[3],:,:]
-        data_calendar_weighted = data_calendar_15ns*weights[np.newaxis, np.newaxis, :, np.newaxis, np.newaxis]
+        weights_array = np.broadcast_to(weights, (16,12,144,12))
+        weights_array = np.swapaxes(weights_array, 2,3)
+        data_calendar_weighted = np.multiply(data_calendar_15ns, weights_array[:,:,:,:,np.newaxis])
+        nanned_weights_array = np.multiply(np.divide(data_calendar_weighted, data_calendar_weighted), weights_array[:,:,:,:,np.newaxis])
         shape = np.shape(data_calendar_weighted)
-        tropical_reshaped = np.reshape(data_calendar_weighted, (shape[0], shape[1], shape[2]*shape[3], shape[4]))
-        tropical_mean = np.nansum(tropical_reshaped, axis=2)/(sum(weights)*144)
+
+        tropical_data_reshaped = np.reshape(data_calendar_weighted, (shape[0], shape[1], shape[2]*shape[3], shape[4]))
+        tropical_weights_reshaped = np.reshape(nanned_weights_array, (shape[0], shape[1], shape[2]*shape[3], shape[4]))
+        tropical_mean = np.nansum(tropical_data_reshaped, axis=2)/np.nansum(tropical_weights_reshaped, axis=2)
     return(tropical_mean)
 
 def regress_out(things_to_regress_out_of_ts, ts):
